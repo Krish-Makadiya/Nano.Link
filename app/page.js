@@ -1,101 +1,132 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+const page = () => {
+    const [url, setUrl] = useState("");
+    const [shortUrl, setShortUrl] = useState("");
+    const [generatedUrl, setGeneratedUrl] = useState("");
+    
+    const randomStringGenerator = () => {
+        const characters =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        const length = 8;
+        let result = "";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+        for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            result += characters.charAt(randomIndex);
+        }
+        console.log("Result", result);
+        return result;
+    };
+
+    
+    const submitHandler = () => {
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+        
+        const randomString = randomStringGenerator();
+        const newGeneratedUrl = `${process.env.NEXT_PUBLIC_HOST}/${randomString}`;
+        
+        setGeneratedUrl(newGeneratedUrl);
+
+        const raw = JSON.stringify({
+            url: url,
+            generatedUrl: newGeneratedUrl
+        });
+
+        const requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: raw,
+            redirect: "follow",
+        };
+
+        fetch("/api/generate", requestOptions)
+            .then((response) => response.json())
+            .then((result) => {
+                setUrl("");
+            })
+            .catch((error) => console.error(error));
+    };
+
+    return (
+        <div className="flex flex-col items-center h-[80vh] w-[80%] mx-auto justify-evenly">
+            <div className="text-[60px] font-[900] text-[#3d3d3d] text-center">
+                Shorten your URLs <br /> with simple and easy
+            </div>
+
+            <div className="flex flex-col items-center w-[60%]">
+                <div className="flex items-center justify-center gap-2">
+                    <p className="text-lg text-[#3d3d3d]">
+                        Just paste your link
+                    </p>
+                    <svg
+                        className="w-6 h-6 text-[#3d3d3d]"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={3}
+                        viewBox="0 0 24 24">
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                        />
+                    </svg>
+                </div>
+
+                <div className="flex items-center justify-center w-full gap-4 mt-4">
+                    <div className="w-full flex justify-center items-center gap-4">
+                        <input
+                            type="text"
+                            placeholder="Enter your URL here"
+                            className="flex-1 px-4 py-4 text-sm border-[2.5px] border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff7b9b] focus:border-transparent"
+                            value={url}
+                            onChange={(e) => setUrl(e.target.value)}
+                        />
+                        <button
+                            onClick={submitHandler}
+                            className="px-8 py-4 text-sm font-bold bg-[#ff7b9b] text-black rounded-md border-[2.5px] border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all whitespace-nowrap">
+                            Shorten
+                        </button>
+                    </div>
+                </div>
+
+                {generatedUrl && (
+                    <>
+                        <div className="flex items-center justify-center gap-4 mt-8">
+                            <a
+                                href={generatedUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-lg text-[#3d3d3d] hover:text-[#ff7b9b] transition-colors">
+                                {generatedUrl}
+                            </a>
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(generatedUrl);
+                                }}
+                                className="p-2 text-sm font-bold bg-[#ff7b9b] text-black rounded-md border-[2.5px] border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                                <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
-}
+    );
+};
+
+export default page;
