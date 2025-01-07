@@ -2,10 +2,12 @@
 import { useState } from "react";
 
 const page = () => {
+    // State variables for managing URL input, generated short URL, and copy status
     const [url, setUrl] = useState("");
     const [generatedUrl, setGeneratedUrl] = useState("");
     const [copied, setCopied] = useState(false);
     
+    // Generates a random 8-character string for the shortened URL
     const randomStringGenerator = () => {
         const characters =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -19,6 +21,7 @@ const page = () => {
         return result;
     };
 
+    // Validates if the input string is a valid URL
     const isValidUrl = (string) => {
         try {
             new URL(string);
@@ -28,22 +31,27 @@ const page = () => {
         }
     };
 
+    // Handles form submission
     const submitHandler = (e) => {
         e.preventDefault();
         
+        // Validate URL before processing
         if (!isValidUrl(url)) {
             alert("Please enter a valid URL");
             return;
         }
         
+        // Set up headers for API request
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
         
+        // Generate the shortened URL
         const randomString = randomStringGenerator();
         const newGeneratedUrl = `${process.env.NEXT_PUBLIC_HOST}/${randomString}`;
         
         setGeneratedUrl(newGeneratedUrl);
 
+        // Prepare data for API request
         const raw = JSON.stringify({
             url: url,
             generatedUrl: newGeneratedUrl
@@ -56,23 +64,24 @@ const page = () => {
             redirect: "follow",
         };
 
+        // Send request to API endpoint
         fetch("/api/generate", requestOptions)
             .then((response) => response.json())
             .then((result) => {
-                setUrl("");
+                setUrl(""); // Clear input field after successful submission
             })
             .catch((error) => console.error("error:", error));
     };
 
     return (
-        <div className="flex flex-col items-center h-[80vh] w-[80%] mx-auto justify-evenly">
-            <div className="text-[60px] font-[900] text-[#3d3d3d] text-center">
+        <div className="flex flex-col items-center h-[80vh] w-[90vw] sm:w-[80vw] mx-auto justify-evenly">
+            <div className="text-[30px] md:text-[60px] font-[900] text-[#3d3d3d] text-center">
                 Shorten your URLs <br /> with simple and easy
             </div>
 
-            <div className="flex flex-col items-center w-[60%]">
+            <div className="flex flex-col items-center w-full md:w-[60%]">
                 <div className="flex items-center justify-center gap-2">
-                    <p className="text-lg text-[#3d3d3d]">
+                    <p className="text-sm md:text-lg text-[#3d3d3d]">
                         Just paste your link
                     </p>
                     <svg
@@ -91,18 +100,18 @@ const page = () => {
                 </div>
 
                 <div className="flex items-center justify-center w-full gap-4 mt-4">
-                    <form className="w-full flex justify-center items-center gap-4">
+                    <form className="w-full flex flex-col md:flex-row justify-center items-center gap-4">
                         <input
                             type="text"
                             placeholder="Enter your URL here"
-                            className="flex-1 px-4 py-4 text-sm border-[2.5px] border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff7b9b] focus:border-transparent"
+                            className="w-full md:flex-1 px-3 py-3 text-sm border-[2.5px] border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff7b9b] focus:border-transparent"
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
                         />
                         <button
                             onClick={(e) => submitHandler(e)}
                             type="submit"
-                            className="px-8 py-4 text-sm font-bold bg-[#ff7b9b] text-black rounded-md border-[2.5px] border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all whitespace-nowrap">
+                            className="w-[150px] md:w-auto px-6 py-3 text-sm font-bold bg-[#ff7b9b] text-black rounded-md border-[2.5px] border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all whitespace-nowrap">
                             Shorten
                         </button>
                     </form>
